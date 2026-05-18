@@ -1,0 +1,21 @@
+{
+  "name": "applescriptcompiler",
+  "version": "0.0.1",
+  "description": "Compiles TypeScript into AppleScript!",
+  "license": "ISC",
+  "author": "Max McDaniel",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "compile": "tsc -w",
+    "token": "node out/tokenizer.js",
+    "parse": "node out/parser.js",
+    "debug-compile": "node out/compile.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0"
+  }
+}
