@@ -1,4 +1,4 @@
-import { ASTNode, CommentNode, IdentifierNode, LogNode, NumberLiteralNode, Program, StringLiteralNode, VariableDeclaration, VariableDeclarationKind } from "./types/Node";
+import { ASTNode, CommentNode, IdentifierNode, LogNode, NewExpressionNode, NumberLiteralNode, Program, StringLiteralNode, VariableDeclaration, VariableDeclarationKind } from "./types/Node";
 import { Token, TokenType } from "./types/Token";
 
 export default class Parser {
@@ -22,8 +22,34 @@ export default class Parser {
                 continue;
             };
 
+            if (this.isNewKeyword()) {
+                const newNode = this.parseNewExpression() as NewExpressionNode;
+                const children: ASTNode[] = [];
+                const parameters = this.parseParameters();
+
+                for (let node of parameters) {
+                    switch(node.type) {
+                        case "IdentifierNode":
+                            children.push({ type: "IdentifierNode", name: (node as IdentifierNode).name } as IdentifierNode);
+                            break;
+                        case "StringLiteralNode":
+                            children.push({ type: "StringLiteralNode", value: (node as StringLiteralNode).value } as StringLiteralNode);
+                            break;
+                        case "NumberLiteralNode":
+                            children.push({ type: "NumberLiteralNode", value: (node as NumberLiteralNode).value } as NumberLiteralNode);
+                            break;
+                    };
+                };
+
+                newNode.children = children;
+                body.push(newNode);
+            };
+
             if (token.type === TokenType.LOG) {
-                body.push(this.parseLog());
+                body.push({
+                    type: "LogNode",
+                    value: this.parseParameters()
+                } as LogNode);
                 continue;
             };
 
@@ -72,8 +98,9 @@ export default class Parser {
         return { type: "CommentNode", value: token.value } as CommentNode;
     };
 
-    private parseLog(): ASTNode {
-        const token = this.advance();
+    private parseParameters(): ASTNode[] {
+        const token = this.peek();
+
         const opening = this.typeCheck(TokenType.SYMBOL).value;
         if (opening !== "(") throw new Error(`Expecing "(" after ${token}`);
 
@@ -96,11 +123,24 @@ export default class Parser {
         const closing = this.typeCheck(TokenType.SYMBOL).value;
         if (closing !== ")") throw new Error(`Expecing ")" after ${token}`);
 
-        return { type: "LogNode", value: children } as LogNode;
+        return children;
     };
 
     // TODO
     private parseOperator() {};
+
+    private parseNewExpression(): ASTNode {
+        const token = this.advance();
+        const classIdentifier = this.typeCheck(TokenType.IDENTIFIER);
+
+        return {
+            type: "NewExpressionNode",
+            value: {
+                type: "IdentifierNode",
+                name: classIdentifier.value
+            }
+        } as NewExpressionNode;
+    };
 
     private peek(): Token {
         return this.tokens[this.position] ?? { type: TokenType.EOF, value: "", line: 0, column: 0 };;
@@ -112,6 +152,12 @@ export default class Parser {
 
     private isVariableKeyword(): boolean {
         if (["const", "let", "var"].includes(this.peek().value)) return true;
+
+        return false;
+    };
+
+    private isNewKeyword(): boolean {
+        if (this.peek().value === "new" && this.peek().type === TokenType.KEYWORD) return true;
 
         return false;
     };

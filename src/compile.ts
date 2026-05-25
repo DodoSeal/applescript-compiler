@@ -21,7 +21,7 @@ const astOutput = debugParser.Parse();
 
 // Output the compiled AppleScript
 const debugGenerator = new CodeGenerator();
-let outputCode = `${compilerMessage}`;
+let outputCode = `${compilerMessage}tell application id "com.figure53.QLab.5" to tell front workspace\n\n`;
 
 for (let node of astOutput.body) {
     const code = debugGenerator.Generate(node);
@@ -30,6 +30,8 @@ for (let node of astOutput.body) {
     outputCode += "\n"
 };
 
+outputCode += "\nend tell";
+
 const outputPath = path.join(__dirname, `../src/examples/${testFileName}-compiled.applescript`);
 fs.writeFileSync(outputPath, outputCode, { encoding: "utf-8" });
-console.log(`Compiled TS to AppleScript!`);;
+console.log(`Compiled TS to AppleScript!`);

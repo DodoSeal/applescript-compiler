@@ -6,7 +6,8 @@ export type NodeType =
     "NumberLiteralNode" |
     "IdentifierNode" |
     "BinaryExpressionNode" |
-    "CommentNode";
+    "CommentNode" |
+    "NewExpressionNode";
 
 export interface ASTNode {
     type: NodeType
@@ -24,6 +25,12 @@ export interface VariableDeclaration extends ASTNode {
     kind: VariableDeclarationKind,
     name: string,
     value: ASTNode
+};
+
+export interface NewExpressionNode extends ASTNode {
+    type: "NewExpressionNode",
+    value: IdentifierNode,
+    children: ASTNode[]
 };
 
 export interface LogNode extends ASTNode {

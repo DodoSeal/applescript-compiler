@@ -1,4 +1,4 @@
-import { ASTNode, CommentNode, IdentifierNode, LogNode, NumberLiteralNode, Program, StringLiteralNode, VariableDeclaration } from "./types/Node";
+import { ASTNode, CommentNode, IdentifierNode, LogNode, NewExpressionNode, NumberLiteralNode, Program, StringLiteralNode, VariableDeclaration } from "./types/Node";
 
 export class CodeGenerator {
     public Generate(node: ASTNode): string {
@@ -27,6 +27,35 @@ export class CodeGenerator {
             case "CommentNode":
                 const comment = (node as CommentNode).value;
                 return `-- ${comment}`;
+
+            // TODO: Grab Properties!
+            case "NewExpressionNode":
+                let outCode = `make type `;
+
+                const thisNode = (node as NewExpressionNode);
+                const identifier = thisNode.value.name;
+                let children = thisNode.children;
+                outCode += `"${(children[0] as StringLiteralNode).value}"`;
+
+                children = children.slice(1);
+
+                for (let param of children) {
+                    switch(param.type) {
+                        case "IdentifierNode":
+                            outCode += (param as IdentifierNode).name;
+                            break;
+                        case "StringLiteralNode":
+                            const cueName = (param as StringLiteralNode).value;
+                            outCode += `\nset q name of (last item of (selected as list)) to "${cueName}"`;
+                            break;
+                        case "NumberLiteralNode":
+                            const cueNum = (param as NumberLiteralNode).value;
+                            outCode += `\nset q number of (last item of (selected as list)) to "${cueNum}"`;
+                            break;
+                    };
+                };
+
+                return outCode;
 
             default:
                 throw new Error(`Unknown node type: ${node.type}`);
